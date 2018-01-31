@@ -1,0 +1,62 @@
+apply plugin: 'com.android.application'
+
+allprojects {
+    repositories {
+        jcenter()
+        maven {
+            url "https://oss.sonatype.org/content/repositories/snapshots/"
+        }
+        maven {
+            url "http://google.bintray.com/googlevr"
+        }
+        flatDir {
+            dirs 'libs'
+        }
+    }
+}
+
+android {
+    compileSdkVersion 26
+    defaultConfig {
+        applicationId "org.crbozz.multiscene"
+        minSdkVersion 23
+        targetSdkVersion 26
+        versionCode 1
+        versionName "1.0"
+    }
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+
+    // ignore the x86 and arm-v8 files from the google vr libraries
+    packagingOptions {
+        exclude 'lib/arm64-v8a/libgvr_audio.so'
+        exclude 'lib/x86/libgvr_audio.so'
+
+        exclude 'lib/x86/libgvr.so'
+        exclude 'lib/arm64-v8a/libgvr.so'
+    }
+}
+
+ext.gearvrfVersion='4.0.1-SNAPSHOT'
+project.ext.jomlVersion = "1.9.1-SNAPSHOT"
+
+dependencies {
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation 'com.android.support:appcompat-v7:26.1.0'
+
+    compile 'com.google.code.gson:gson:2.8.2'
+    compile "org.joml:joml-android:${jomlVersion}"
+
+    compile "org.gearvrf:framework:$gearvrfVersion"
+    compile "org.gearvrf:backend_daydream:$gearvrfVersion"
+    compile "org.gearvrf:backend_oculus:$gearvrfVersion"
+
+    debugCompile(name: 'ResonanceAudio-debug', ext: 'aar')
+    releaseCompile(name: 'ResonanceAudio-release', ext: 'aar')
+
+    compile 'com.google.vr:sdk-audio:1.120.0'
+}
