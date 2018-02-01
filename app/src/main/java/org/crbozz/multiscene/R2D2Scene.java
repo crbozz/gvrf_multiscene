@@ -4,32 +4,43 @@ import org.gearvrf.GVRContext;
 import org.gearvrf.GVRDrawFrameListener;
 import org.gearvrf.GVRScene;
 import org.gearvrf.GVRSceneObject;
-import org.gearvrf.audio.GVRAudioListener;
-import org.gearvrf.audio.GVRAudioSource;
+import org.gearvrf.ISceneEvents;
+import org.gearvrf.resonanceaudio.GVRAudioManager;
+import org.gearvrf.resonanceaudio.GVRAudioSource;
 
 import java.io.IOException;
 
-final class R2D2Scene extends GVRScene implements GVRDrawFrameListener {
+final class R2D2Scene extends GVRScene implements GVRDrawFrameListener, ISceneEvents
+{
     private static final float TOTAL = 8f; // The whole trajectory will take 8s
     private static final float FACTOR = (float)(Math.PI * 2.0) / TOTAL;
 
     private GVRSceneObject r2d2 = null;
     private float elapsed = 0f;
 
-    private GVRAudioListener audioListener;
+    private GVRAudioManager audioListener;
     private GVRAudioSource audioSource;
 
-    public R2D2Scene(GVRContext gvrContext) {
+    public R2D2Scene(GVRContext gvrContext, GVRAudioManager audioManager) {
         super(gvrContext);
+        audioListener = audioManager;
+    }
 
-        loadObjects(gvrContext);
+    public void onInit(GVRContext ctx, GVRScene scene)
+    {
+        if (scene == this)
+        {
+            audioListener.clearSources();
+            loadObjects(ctx);
+            ctx.registerDrawFrameListener(this);
+        }
+    }
 
-        gvrContext.registerDrawFrameListener(this);
+    public void onAfterInit()
+    {
     }
 
     private void loadObjects(GVRContext gvrContext) {
-        audioListener = new GVRAudioListener(gvrContext, this);
-
         audioSource = new GVRAudioSource(gvrContext);
 
         try {
@@ -38,6 +49,7 @@ final class R2D2Scene extends GVRScene implements GVRDrawFrameListener {
             addSceneObject(r2d2);
 
             r2d2.attachComponent(audioSource);
+            audioListener.addSource(audioSource);
             audioSource.load("cube_sound.wav");
             audioSource.setVolume(5f);
             audioSource.play(true);
@@ -47,11 +59,11 @@ final class R2D2Scene extends GVRScene implements GVRDrawFrameListener {
     }
 
     void disable() {
-        audioListener.disable();
+        audioListener.setEnable(false);
     }
 
     void enable() {
-        audioListener.enable();
+        audioListener.setEnable(true);
     }
 
     @Override
