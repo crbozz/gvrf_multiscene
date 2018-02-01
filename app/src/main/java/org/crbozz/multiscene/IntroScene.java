@@ -5,18 +5,32 @@ import org.gearvrf.GVRContext;
 import org.gearvrf.GVRScene;
 import org.gearvrf.GVRSceneObject;
 import org.gearvrf.GVRTexture;
-import org.gearvrf.audio.GVRAudioListener;
-import org.gearvrf.audio.GVRAudioSource;
+import org.gearvrf.ISceneEvents;
+import org.gearvrf.resonanceaudio.GVRAudioManager;
+import org.gearvrf.resonanceaudio.GVRAudioSource;
 
-final class IntroScene extends GVRScene {
-    private GVRAudioListener audioListener;
+final class IntroScene extends GVRScene implements ISceneEvents
+{
+    private GVRAudioManager audioListener;
     private GVRAudioSource boardL;
     private GVRAudioSource boardR;
 
-    IntroScene(GVRContext gvrContext) {
+    IntroScene(GVRContext gvrContext, GVRAudioManager audioManager) {
         super(gvrContext);
+        audioListener = audioManager;
+    }
 
-        createObjects(gvrContext);
+    public void onInit(GVRContext ctx, GVRScene scene)
+    {
+        if (scene == this)
+        {
+            audioListener.clearSources();
+            createObjects(ctx);
+        }
+    }
+
+    public void onAfterInit()
+    {
     }
 
     private void createObjects(GVRContext gvrContext) {
@@ -31,16 +45,15 @@ final class IntroScene extends GVRScene {
         rightDoor.getTransform().setPosition(8f, 0f, -8f);
         rightDoor.getTransform().setRotationByAxis(45f, 0f, -1f, 0f);
         addSceneObject(rightDoor);
-
-        audioListener = new GVRAudioListener(gvrContext, this);
-
         boardL = new GVRAudioSource(gvrContext);
         leftDoor.attachComponent(boardL);
+        audioListener.addSource(boardL);
         boardL.load("cartoon009.wav");
         boardL.setVolume(5f);
 
         boardR = new GVRAudioSource(gvrContext);
         rightDoor.attachComponent(boardR);
+        audioListener.addSource(boardR);
         boardR.load("cartoon001a.wav");
         boardR.setVolume(1f);
         boardR.setVolume(5f);

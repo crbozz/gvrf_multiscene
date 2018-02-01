@@ -7,6 +7,8 @@ import android.os.Message;
 import org.gearvrf.GVRActivity;
 import org.gearvrf.GVRContext;
 import org.gearvrf.GVRMain;
+import org.gearvrf.resonanceaudio.GVRAudioManager;
+
 import org.xml.sax.HandlerBase;
 
 public class MainActivity extends GVRActivity {
@@ -33,6 +35,7 @@ public class MainActivity extends GVRActivity {
     }
 
     private class TheMain extends GVRMain {
+        private GVRAudioManager audioManager;
         private IntroScene introScene;
         private R2D2Scene r2D2Scene;
         private EmptyScene emptyScene;
@@ -44,11 +47,12 @@ public class MainActivity extends GVRActivity {
 
         @Override
         public void onInit(final GVRContext gvrContext) {
-            introScene = new IntroScene(gvrContext);
-            r2D2Scene = new R2D2Scene(gvrContext);
+            audioManager = new GVRAudioManager(gvrContext);
+            introScene = new IntroScene(gvrContext, audioManager);
+            r2D2Scene = new R2D2Scene(gvrContext, audioManager);
             emptyScene = new EmptyScene(gvrContext);
-            shipScene = new ShipScene(gvrContext);
-
+            shipScene = new ShipScene(gvrContext, audioManager);
+            audioManager.setEnable(true);
             gvrContext.setMainScene(introScene);
 
             mHandler = new Handler(new Handler.Callback() {
@@ -63,6 +67,7 @@ public class MainActivity extends GVRActivity {
                     if (gvrContext.getMainScene() == introScene) {
                         gvrContext.setMainScene(r2D2Scene);
                     } else if (gvrContext.getMainScene() == r2D2Scene) {
+                        audioManager.clearSources();
                         gvrContext.setMainScene(emptyScene);
                     } else if (gvrContext.getMainScene() == emptyScene) {
                         gvrContext.setMainScene(shipScene);
@@ -106,7 +111,7 @@ public class MainActivity extends GVRActivity {
             if (!mStop) {
                 return;
             }
-
+            audioManager.setEnable(true);
             mStop = false;
             mHandler.sendEmptyMessageDelayed(0, 10000);
         }

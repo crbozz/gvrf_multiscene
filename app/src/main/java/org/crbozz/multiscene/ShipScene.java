@@ -6,12 +6,13 @@ import org.gearvrf.GVRScene;
 import org.gearvrf.GVRDrawFrameListener;
 import org.gearvrf.GVRSceneObject;
 import org.gearvrf.GVRTexture;
-import org.gearvrf.audio.GVRAudioListener;
-import org.gearvrf.audio.GVRAudioSource;
+import org.gearvrf.ISceneEvents;
+import org.gearvrf.resonanceaudio.GVRAudioManager;
+import org.gearvrf.resonanceaudio.GVRAudioSource;
 import org.gearvrf.scene_objects.GVRSphereSceneObject;
 
 
-final class ShipScene extends GVRScene implements GVRDrawFrameListener {
+final class ShipScene extends GVRScene implements ISceneEvents, GVRDrawFrameListener {
     private static final float TOTAL = 13f; // The whole trajectory will take 13s
     private static final float FACTOR = (float)(Math.PI * 2.0) / TOTAL;
     private static final float FACTOR2 = 360f / (TOTAL + 2f);
@@ -20,19 +21,29 @@ final class ShipScene extends GVRScene implements GVRDrawFrameListener {
 
     private float elapsed = 0f;
 
-    private GVRAudioListener audioListener;
+    private GVRAudioManager audioListener;
     private GVRAudioSource audioSource;
 
-    public ShipScene(GVRContext gvrContext) {
+    public ShipScene(GVRContext gvrContext, GVRAudioManager audioManager) {
         super(gvrContext);
+        audioListener = audioManager;
+    }
 
-        loadObjects(gvrContext);
+    public void onInit(GVRContext ctx, GVRScene scene)
+    {
+        if (scene == this)
+        {
+            audioListener.clearSources();
+            loadObjects(ctx);
+            ctx.registerDrawFrameListener(this);
+        }
+    }
 
-        gvrContext.registerDrawFrameListener(this);
+    public void onAfterInit()
+    {
     }
 
     private void loadObjects(GVRContext gvrContext) {
-        audioListener = new GVRAudioListener(gvrContext, this);
 
         audioSource = new GVRAudioSource(gvrContext);
 
@@ -45,6 +56,7 @@ final class ShipScene extends GVRScene implements GVRDrawFrameListener {
         addSceneObject(ship);
 
         ship.attachComponent(audioSource);
+        audioListener.addSource(audioSource);
         audioSource.load("campfire.wav");
         audioSource.setVolume(5f);
         audioSource.play(true);
